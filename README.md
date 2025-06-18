@@ -67,10 +67,12 @@ The **History Teaching Resource Generator** is a web-based tool designed to assi
 4. **Generate**: Click "Generate Resource" to create the content.
 5. **Review**: View the output, stats, and download or revisit past resources as needed.
 
-**Important**: To use this tool, you must download the `TEST2.html` file below. Clicking the link will automatically download the file. Follow these steps after downloading:
-- **Step 1**: Locate the downloaded `TEST2.html` file on your computer.
+**Important**: To use this tool, you must download the `History Teaching Resource Generator.html` file located in the `folder1` directory within this repository. Click the link below to automatically download the file. Follow these steps after downloading:
+- **Step 1**: Locate the downloaded `History Teaching Resource Generator.html` file on your computer.
 - **Step 2**: Double-click the file to open it in your web browser and run it on your local server.
 - **Note**: Ensure you have an internet connection to access the OpenRouter API. Replace `'your_api_key_here'` in the code with your actual OpenRouter API key to enable generation functionality.
+
+[Download History Teaching Resource Generator.html](folder1/TEST2.html)
 
 ## Additional Considerations
 - **Potential Improvements**:
