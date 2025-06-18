@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Teaching Resource Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin: 0;
+        }
+        p {
+            font-size: 1.2em;
+            color: #7f8c8d;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .form-output, .history {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-output:hover, .history:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        form label {
+            display: block;
+            margin: 15px 0 5px;
+            font-weight: 500;
+            color: #34495e;
+        }
+        form input, form select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ecf0f1;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        form input:focus, form select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            padding: 12px 25px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+        #outputContainer {
+            margin-top: 20px;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #output {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 5px;
+            font-size: 1em;
+            background: #f9f9f9;
+            resize: none;
+        }
+        #stats {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        #error {
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        .history h2 {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        #clearHistoryBtn {
+            background:#e74c3c;
+            margin-bottom: 15px;
+        }
+        #clearHistoryBtn:hover {
+            background: #c0392b;
+        }
+        #historyList {
+            list-style: none;
+            padding: 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .history-item {
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+        }
+        .history-item:hover {
+            background: #ecf0f1;
+            transform: translateX(5px);
+        }
+        .history-item.selected {
+            background: #3498db;
+            color: #fff;
+        }
+        #downloadBtn {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📘 History Teaching Resource Generator</h1>
+        <p>Create engaging history resources for any grade level with ease.</p>
+    </header>
+    <div class="container">
+        <div class="form-output">
+            <div id="error"></div>
+            <form id="resourceForm">
+                <label for="resourceType">Select Resource Type:</label>
+                <select id="resourceType">
+                    <option value="100-word summary">100-Word Summary</option>
+                    <option value="lesson plan">Lesson Plan</option>
+                    <option value="study guide">Study Guide</option>
+                    <option value="quiz">Quiz</option>
+                    <option value="compare & contrast">Compare & Contrast</option>
+                </select>
+                <label for="grade">Enter Grade Level (e.g., 10):</label>
+                <input type="text" id="grade" required>
+                <div id="eventInputs"></div>
+                <button type="button" id="generateBtn">Generate Resource</button>
+            </form>
+            <div id="outputContainer">
+                <textarea id="output" readonly placeholder="Your generated resource will appear here..."></textarea>
+                <div id="stats"></div>
+            </div>
+            <button id="downloadBtn" style="display: none;">Download as Text</button>
+        </div>
+        <div class="history">
+            <h2>Previously Generated Resources</h2>
+            <button id="clearHistoryBtn">Clear History</button>
+            <ul id="historyList"></ul>
+        </div>
+    </div>
+    <script>
+        const PROMPT_TEMPLATES = {
+            "100-word summary": (event, grade) => `Write a 100-word summary suitable for Grade ${grade} students about the historical event: ${event}.`,
+            "lesson plan": (event, grade) => `Create a one-hour lesson plan for Grade ${grade} students on the topic: ${event}. Include objectives, activities, and assessment.`,
+            "study guide": (event, grade) => `Generate a study guide for Grade ${grade} students on the topic: ${event}. Include key points and timeline.`,
+            "quiz": (event, grade) => `Create 5 multiple-choice questions with answers on the topic: ${event} suitable for Grade ${grade} students.`,
+            "compare & contrast": (event1, event2, grade) => `Compare the following two events: ${event1} and ${event2} in terms of causes, outcomes, and significance for Grade ${grade} students.`
+        };
+
+        const HISTORY_KEY = 'historyItems';
+        const TOTAL_TOKEN_LIMIT = 10000; // Hypothetical total token limit (replace with actual limit if available)
+
+        function loadHistory() {
+            return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+        }
+
+        function saveHistory(history) {
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        }
+
+        function calculateRemainingTokens(history, currentTokensUsed) {
+            const totalUsed = history.reduce((sum, item) => sum + (item.tokensUsed || 0), 0) + currentTokensUsed;
+            return Math.max(TOTAL_TOKEN_LIMIT - totalUsed, 0);
+        }
+
+        function displayHistory() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            const history = loadHistory();
+            history.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                li.textContent = `${item.resourceType} for Grade ${item.grade} on ${item.events.join(' and ')}`;
+                li.dataset.index = index;
+                li.addEventListener('click', () => {
+                    document.querySelectorAll('.history-item').forEach(el => el.classList.remove('selected'));
+                    li.classList.add('selected');
+                    setOutput(item);
+                });
+                historyList.appendChild(li);
+            });
+        }
+
+        function addHistoryItem(item) {
+            const historyList = document.getElementById('historyList');
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.textContent = `${item.resourceType} for Grade ${item.grade} on ${item.events.join(' and ')}`;
+            li.dataset.index = historyList.children.length;
+            li.style.opacity = '0';
+            li.style.transform = 'translateX(20px)';
+            li.addEventListener('click', () => {
+                document.querySelectorAll('.history-item').forEach(el => el.classList.remove('selected'));
+                li.classList.add('selected');
+                setOutput(item);
+            });
+            historyList.insertBefore(li, historyList.firstChild); // Add at top
+            setTimeout(() => {
+                li.style.opacity = '1';
+                li.style.transform = 'translateX(0)';
+            }, 10);
+        }
+
+        function setOutput(item) {
+            const outputContainer = document.getElementById('outputContainer');
+            outputContainer.style.opacity = '0';
+            const history = loadHistory();
+            const tokensRemaining = calculateRemainingTokens(history, item.tokensUsed);
+            setTimeout(() => {
+                document.getElementById('output').value = item.generatedText;
+                document.getElementById('stats').innerHTML = `
+                    <p>Generation Time: ${(item.duration / 1000).toFixed(2)} seconds</p>
+                    <p>Tokens Used: ${item.tokensUsed}</p>
+                    <p>Tokens Remaining: ${tokensRemaining}</p>
+                `;
+                outputContainer.style.opacity = '1';
+                document.getElementById('downloadBtn').style.display = 'block';
+            }, 50);
+        }
+
+        async function generateResponse(prompt) {
+            const API_KEY = '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'; // Replace with your actual API key
+            const headers = {
+                'Authorization': `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json'
+            };
+            const data = {
+                'model': 'mistralai/mistral-7b-instruct',
+                'messages': [{ 'role': 'user', 'content': prompt }]
+            };
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+                throw new Error('API request failed');
+            }
+            const result = await response.json();
+            return {
+                text: result.choices[0].message.content,
+                usage: result.usage
+            };
+        }
+
+        function updateEventInputs() {
+            const resourceType = document.getElementById('resourceType').value;
+            const eventInputs = document.getElementById('eventInputs');
+            eventInputs.innerHTML = resourceType === 'compare & contrast' ?
+                `<label for="event1">First Historical Event:</label>
+                <input type="text" id="event1" required>
+                <label for="event2">Second Historical Event:</label>
+                <input type="text" id="event2" required>` :
+                `<label for="event">Historical Event or Topic:</label>
+                <input type="text" id="event" required>`;
+        }
+
+        document.getElementById('resourceType').addEventListener('change', updateEventInputs);
+
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = '';
+            const resourceType = document.getElementById('resourceType').value;
+            const grade = document.getElementById('grade').value;
+            if (!/^\d+$/.test(grade)) {
+                errorDiv.textContent = 'Please enter a valid numeric grade level.';
+                return;
+            }
+            let events;
+            if (resourceType === 'compare & contrast') {
+                const event1 = document.getElementById('event1').value;
+                const event2 = document.getElementById('event2').value;
+                if (!event1 || !event2) {
+                    errorDiv.textContent = 'Please enter both historical events.';
+                    return;
+                }
+                events = [event1, event2];
+            } else {
+                const event = document.getElementById('event').value;
+                if (!event) {
+                    errorDiv.textContent = 'Please enter a historical event.';
+                    return;
+                }
+                events = [event];
+            }
+            document.getElementById('output').value = 'Generating...';
+            document.getElementById('outputContainer').style.opacity = '0';
+            document.getElementById('downloadBtn').style.display = 'none';
+            const prompt = resourceType === 'compare & contrast' ?
+                PROMPT_TEMPLATES[resourceType](events[0], events[1], grade) :
+                PROMPT_TEMPLATES[resourceType](events[0], grade);
+            try {
+                const startTime = Date.now();
+                const { text, usage } = await generateResponse(prompt);
+                const duration = Date.now() - startTime;
+                const item = {
+                    resourceType,
+                    grade,
+                    events,
+                    generatedText: text,
+                    duration,
+                    tokensUsed: usage.total_tokens
+                };
+                let history = loadHistory();
+                history.push(item);
+                saveHistory(history);
+                setOutput(item);
+                addHistoryItem(item);
+            } catch (error) {
+                const duration = Date.now() - startTime;
+                const history = loadHistory();
+                const tokensRemaining = calculateRemainingTokens(history, 0);
+                document.getElementById('output').value = 'Error generating response';
+                document.getElementById('stats').innerHTML = `
+                    <p>Generation Time: ${(duration / 1000).toFixed(2)} seconds</p>
+                    <p>Tokens Used: N/A</p>
+                    <p>Tokens Remaining: ${tokensRemaining}</p>
+                `;
+            }
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const text = document.getElementById('output').value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'teaching_resource.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear the history?')) {
+                localStorage.removeItem(HISTORY_KEY);
+                displayHistory();
+                document.getElementById('output').value = '';
+                document.getElementById('stats').innerHTML = '';
+            }
+        });
+
+        updateEventInputs();
+        displayHistory();
+    </script>
+</body>
+</html>
